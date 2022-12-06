@@ -49,13 +49,14 @@ def barchart_restaurant_categories(db_filename):
     categories = list(new.keys())
     val = list(new.values())
   
-    fig = plt.figure(figsize = (10, 5))
+    # fig = plt.figure(figsize = (10, 5))
  
     plt.barh(categories, val)
     
     plt.ylabel("Restaurant Categories")
     plt.xlabel("No. of Restaurants")
     plt.title("Restaurants in South U")
+    plt.tight_layout()
     plt.show()
     return new
 
