@@ -9,15 +9,55 @@ def get_restaurant_data(db_filename):
     dictionaries. The key:value pairs should be the name, category, building, and rating
     of each restaurant in the database.
     """
-    pass
-
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_filename)
+    cur = conn.cursor()
+    cur.execute("SELECT name, category_id, building_id, rating FROM restaurants")
+    data = cur.fetchall()
+    info = []
+    for i in data:
+        complete = {}
+        complete['name'] = i[0]
+        complete['category'] = i[1]
+        complete['building'] = i[2]
+        complete['rating'] = i[3]
+        info.append(complete)
+    return info
+    
 def barchart_restaurant_categories(db_filename):
     """
     This function accepts a file name of a database as a parameter and returns a dictionary. The keys should be the
     restaurant categories and the values should be the number of restaurants in each category. The function should
     also create a bar chart with restaurant categories and the counts of each category.
     """
-    pass
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_filename)
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT category, COUNT(category_id) 
+        FROM restaurants 
+        JOIN categories 
+        ON restaurants.category_id = categories.id 
+        GROUP BY category_id
+        ORDER BY category ASC"""
+    )
+    data = cur.fetchall()
+    new = {}
+    for i in data:
+        new[i[0]] = new.get(i, 0) + i[1]
+
+    categories = list(new.keys())
+    val = list(new.values())
+  
+    fig = plt.figure(figsize = (10, 5))
+ 
+    plt.barh(categories, val)
+    
+    plt.ylabel("Restaurant Categories")
+    plt.xlabel("No. of Restaurants")
+    plt.title("Restaurants in South U")
+    plt.show()
+    return new
 
 #EXTRA CREDIT
 def highest_rated_category(db_filename):#Do this through DB as well
@@ -31,7 +71,8 @@ def highest_rated_category(db_filename):#Do this through DB as well
 
 #Try calling your functions here
 def main():
-    pass
+    # get_restaurant_data('South_U_Restaurants.db')
+    barchart_restaurant_categories('South_U_Restaurants.db')
 
 class TestHW8(unittest.TestCase):
     def setUp(self):
@@ -78,4 +119,4 @@ class TestHW8(unittest.TestCase):
 
 if __name__ == '__main__':
     main()
-    unittest.main(verbosity=2)
+    # unittest.main(verbosity=2)
