@@ -1,3 +1,8 @@
+# Your name: Frederick Kusumo
+# Your student id: 95607036
+# Your email: fkusumo@umich.edu
+# List who you have worked with on this project:
+
 import matplotlib.pyplot as plt
 import os
 import sqlite3
@@ -12,7 +17,16 @@ def get_restaurant_data(db_filename):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_filename)
     cur = conn.cursor()
-    cur.execute("SELECT name, category_id, building_id, rating FROM restaurants")
+    cur.execute(
+        """
+        SELECT name, category, building, rating 
+        FROM restaurants
+        JOIN categories
+        ON restaurants.category_id = categories.id
+        JOIN buildings
+        ON restaurants.building_id = buildings.id
+        """
+    )
     data = cur.fetchall()
     info = []
     for i in data:
@@ -34,12 +48,14 @@ def barchart_restaurant_categories(db_filename):
     conn = sqlite3.connect(path+'/'+db_filename)
     cur = conn.cursor()
     cur.execute(
-        """SELECT category, COUNT(category_id) 
+        """
+        SELECT category, COUNT(category_id) 
         FROM restaurants 
         JOIN categories 
         ON restaurants.category_id = categories.id 
         GROUP BY category_id
-        ORDER BY category ASC"""
+        ORDER BY COUNT(category_id) ASC
+        """
     )
     data = cur.fetchall()
     new = {}
@@ -48,14 +64,12 @@ def barchart_restaurant_categories(db_filename):
 
     categories = list(new.keys())
     val = list(new.values())
-  
-    # fig = plt.figure(figsize = (10, 5))
  
     plt.barh(categories, val)
     
     plt.ylabel("Restaurant Categories")
     plt.xlabel("No. of Restaurants")
-    plt.title("Restaurants in South U")
+    plt.title("Types of Restaurants in South University")
     plt.tight_layout()
     plt.show()
     return new
@@ -68,12 +82,44 @@ def highest_rated_category(db_filename):#Do this through DB as well
     in that category. This function should also create a bar chart that displays the categories along the y-axis
     and their ratings along the x-axis in descending order (by rating).
     """
-    pass
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_filename)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT category, rating
+        FROM restaurants 
+        JOIN categories 
+        ON restaurants.category_id = categories.id 
+        GROUP BY category_id
+        ORDER BY rating ASC
+        """
+    )
+    data = cur.fetchall()
+    new = {}
+    for i in data:
+        new[i[0]] = new.get(i, 0) + i[1]
+
+    categories = list(new.keys())
+    val = list(new.values())
+
+    plt.barh(categories, val)
+    
+    plt.ylabel("Categories")
+    plt.xlabel("Ratings")
+    plt.title("Average Restaurant Ratings by Category")
+    plt.tight_layout()
+    plt.show()
+    return data[-1]
 
 #Try calling your functions here
 def main():
-    # get_restaurant_data('South_U_Restaurants.db')
-    barchart_restaurant_categories('South_U_Restaurants.db')
+    first = get_restaurant_data('South_U_Restaurants.db')
+    second = barchart_restaurant_categories('South_U_Restaurants.db')
+    third = highest_rated_category('South_U_Restaurants.db')
+    # print(first)
+    # print(second)
+    # print(third)
 
 class TestHW8(unittest.TestCase):
     def setUp(self):
@@ -120,4 +166,4 @@ class TestHW8(unittest.TestCase):
 
 if __name__ == '__main__':
     main()
-    # unittest.main(verbosity=2)
+    unittest.main(verbosity=2)
